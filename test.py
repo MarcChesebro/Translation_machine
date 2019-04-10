@@ -1,63 +1,72 @@
 from corpora_utils import clean_sentence, retrieve_corpora, filter_sentence_length, create_indexed_dictionary, \
     sentences_to_indexes, extract_max_length, prepare_sentences
 
+import pickle
+
+
+def output_to_file(sentences_1, sentences_2, filename):
+
+    with open('english_{}.txt'.format(filename), 'w') as f:
+        for sentence in sentences_2:
+            string = " ".join([str(string_int) for string_int in sentence]) + '\n'
+            f.write(string)
+
+    with open('german_{}.txt'.format(filename), 'w') as f:
+        for sentence in sentences_1:
+            string = " ".join([str(string_int) for string_int in sentence]) + '\n'
+            f.write(string)
+
+
+def vocab_to_file(vocab1, vocab2, filename):
+    with open('german_{}.txt'.format(filename), 'w') as f:
+        for pair in vocab1:
+            string = "\t".join([str(string_int) for string_int in pair]) + '\n'
+            f.write(string)
+
+    with open('english_{}.txt'.format(filename), 'w') as f:
+        for pair in vocab2:
+            string = "\t".join([str(string_int) for string_int in pair]) + '\n'
+            f.write(string)
+
+
 if __name__ == '__main__':
 
     print("------------------------------------------------------------------------------")
     print('loading data')
 
     sen_l1, sen_l2 = retrieve_corpora()
-    print("# A sentence in the two languages DE & EN")
-    print("DE:", sen_l1[0])
-    print("EN:", sen_l2[0])
-    print("# Corpora length (i.e. number of sentences)")
-    print(len(sen_l1))
-    assert len(sen_l1) == len(sen_l2)
 
     print("------------------------------------------------------------------------------")
     print('cleaning data')
 
     clean_sen_l1 = [clean_sentence(s) for s in sen_l1]
     clean_sen_l2 = [clean_sentence(s) for s in sen_l2]
-    print("# Same sentence as before, but chunked and cleaned")
-    print("DE:", clean_sen_l1[0])
-    print("EN:", clean_sen_l2[0])
 
-    print("------------------------------------------------------------------------------")
-    print('filter data')
-
-    filt_clean_sen_l1, filt_clean_sen_l2 = filter_sentence_length(clean_sen_l1,
-                                                                  clean_sen_l2)
-    print("# Filtered Corpora length (i.e. number of sentences)")
-    print(len(filt_clean_sen_l1))
-    assert len(filt_clean_sen_l1) == len(filt_clean_sen_l2)
+    filt_clean_sen_l1, filt_clean_sen_l2 = filter_sentence_length(clean_sen_l1, clean_sen_l2)
 
     print("------------------------------------------------------------------------------")
     print('Indexing sentence data')
 
-    dict_l1 = create_indexed_dictionary(filt_clean_sen_l1, dict_size=15000, storage_path="/tmp/l1_dict.p")
-    dict_l2 = create_indexed_dictionary(filt_clean_sen_l2, dict_size=10000, storage_path="/tmp/l2_dict.p")
+    dict_l1, vocab_dict_l1 = create_indexed_dictionary(filt_clean_sen_l1, dict_size=15000)
+    dict_l2, vocab_dict_l2 = create_indexed_dictionary(filt_clean_sen_l2, dict_size=10000)
     idx_sentences_l1 = sentences_to_indexes(filt_clean_sen_l1, dict_l1)
     idx_sentences_l2 = sentences_to_indexes(filt_clean_sen_l2, dict_l2)
-    print("# Same sentences as before, with their dictionary ID")
-    print("DE:", list(zip(filt_clean_sen_l1[0], idx_sentences_l1[0])))
-    print("EN:", list(zip(filt_clean_sen_l2[0], idx_sentences_l2[0])))
 
-    print("------------------------------------------------------------------------------")
-    print('length sanity checks')
+    train = 10351
+    test = 2957
+    dev = 1480
 
-    max_length_l1 = extract_max_length(idx_sentences_l1)
-    max_length_l2 = extract_max_length(idx_sentences_l2)
-    print("# Max sentence sizes:")
-    print("DE:", max_length_l1)
-    print("EN:", max_length_l2)
+    inverted_ger_dict = {str(v): k for k, v in dict_l1.items()}
+    inverted_eng_dict = {str(v): k for k, v in dict_l2.items()}
 
-    print("------------------------------------------------------------------------------")
+    with open('english_word_dict.txt', 'wb') as f:
+        pickle.dump(inverted_eng_dict, f)
 
-    data_set = prepare_sentences(idx_sentences_l1, idx_sentences_l2, max_length_l1, max_length_l2)
-    print("# Prepared minibatch with paddings and extra stuff")
-    print("DE:", data_set[0][0])
-    print("EN:", data_set[0][1])
-    print("# The sentence pass from X to Y tokens")
-    print("DE:", len(idx_sentences_l1[0]), "->", len(data_set[0][0]))
-    print("EN:", len(idx_sentences_l2[0]), "->", len(data_set[0][1]))
+    with open('german_word_dict.txt', 'wb') as f:
+        pickle.dump(inverted_ger_dict, f)
+
+    vocab_to_file(vocab_dict_l1, vocab_dict_l2, "vocab")
+
+    output_to_file(idx_sentences_l1[:train], idx_sentences_l2[:train], 'train')
+    output_to_file(idx_sentences_l1[train:(train + test)], idx_sentences_l2[train:(train + test)], 'test')
+    output_to_file(idx_sentences_l1[(train + test):(train + test + dev)], idx_sentences_l2[(train + test):(train + test + dev)], 'dev')
