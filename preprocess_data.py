@@ -1,5 +1,5 @@
 from corpora_utils import clean_sentence, retrieve_corpora, filter_sentence_length, create_indexed_dictionary, \
-    sentences_to_indexes, extract_max_length, prepare_sentences
+    sentences_to_indexes
 
 import pickle
 
