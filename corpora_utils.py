@@ -5,8 +5,8 @@ from nltk.corpus import comtrans
 
 def retrieve_corpora(translated_sentences_l1_l2='alignment-de-en.txt'):
     als = comtrans.aligned_sents(translated_sentences_l1_l2)
-    sentences_l1 = [sent.words for sent in als]
-    sentences_l2 = [sent.mots for sent in als]
+    sentences_l1 = [sentence.words for sentence in als]
+    sentences_l2 = [sentence.mots for sentence in als]
     return sentences_l1, sentences_l2
 
 
@@ -29,8 +29,8 @@ def filter_sentence_length(sentences_l1, sentences_l2, min_len=0, max_len=20):
 def create_indexed_dictionary(sentences, dict_size=10000):
     count_words = Counter()
     dict_words = {}
-    for sen in sentences:
-        for word in sen:
+    for sentence in sentences:
+        for word in sentence:
             count_words[word] += 1
 
     vocab = []
@@ -43,7 +43,6 @@ def create_indexed_dictionary(sentences, dict_size=10000):
 
 def sentences_to_indexes(sentences, indexed_dictionary):
     indexed_sentences = []
-    not_found_counter = 0
     for sent in sentences:
         idx_sent = []
         for word in sent:
@@ -51,8 +50,6 @@ def sentences_to_indexes(sentences, indexed_dictionary):
                 idx_sent.append(indexed_dictionary[word])
             except KeyError:
                 idx_sent.append(-1)
-                not_found_counter += 1
         indexed_sentences.append(idx_sent)
-    print('[sentences_to_indexes] Did not find {} words'.format(not_found_counter))
     return indexed_sentences
 
