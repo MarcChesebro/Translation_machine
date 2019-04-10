@@ -1,5 +1,9 @@
 # Translation_machine
 
+Authors:
+Marc Chesebro
+Andrew Lawton
+
 ## Instructions
 
 ### Setup
