@@ -13,9 +13,9 @@ mkdir -p $MODEL_DIR
 
 python -m bin.train \
   --config_paths="
-      seq2seq/example_configs/nmt_small.yml,
-      seq2seq/example_configs/train_seq2seq.yml,
-      seq2seq/example_configs/text_metrics_bpe.yml" \
+      configs/nmt_small.yml,
+      configs/train_seq2seq.yml,
+      configs/text_metrics_bpe.yml" \
   --model_params "
       vocab_source: $VOCAB_SOURCE
       vocab_target: $VOCAB_TARGET" \
